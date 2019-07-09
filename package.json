@@ -1,10 +1,11 @@
 {
   "name": "as2ts",
-  "version": "0.0.1",
-  "description": "ActionScript API port to Typescirpt",
+  "version": "0.0.2",
+  "description": "ActionScript API port to Typescirpt!!",
   "main": "./lib/as2ts.js",
+  "types": "./lib/as2ts.d.ts",
   "scripts": {
-    "test": "./node_modules/.bin/mocha -r ./node_modules/ts-node/register src/**/*_test.ts"
+    "test": "./node_modules/.bin/mocha -r ./node_modules/ts-node/register test/**/*_test.ts"
   },
   "repository": {
     "type": "git",

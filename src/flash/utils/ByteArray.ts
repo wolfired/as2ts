@@ -1,8 +1,18 @@
 import { Endian } from "./Endian"
 
+enum Mode {
+    Read,
+    Write,
+}
+
 export class ByteArray {
-    public constructor(raw: DataView) {
-        this._raw = raw;
+    private static BYTES_1: number = 1;
+    private static BYTES_2: number = 2;
+    private static BYTES_4: number = 4;
+    private static BYTES_8: number = 8;
+
+    public constructor(raw?: DataView) {
+        this._raw = void 0 === raw ? new DataView(new ArrayBuffer(0)) : raw;
         this._endian = false;
         this._length = 0;
         this._position = 0;
@@ -33,7 +43,19 @@ export class ByteArray {
     }
 
     public set length(value: number) {
+        if (this._length === value) {
+            return;
+        }
+
+        if (this._length < value) {
+            this.need(value - this._length, Mode.Write);
+        }
+
         this._length = value;
+
+        if (this._position > this._length) {
+            this._position = this._length;
+        }
     }
 
     public get position(): number {
@@ -41,11 +63,15 @@ export class ByteArray {
     }
 
     public set position(value: number) {
+        if (this._position === value) {
+            return;
+        }
+
         this._position = value;
     }
 
     public get bytesAvailable(): number {
-        return 0;
+        return Math.max(0, this._length - this._position);
     }
 
     public clear(): void {
@@ -54,56 +80,95 @@ export class ByteArray {
     }
 
     public readBoolean(): boolean {
+        this.need(ByteArray.BYTES_1, Mode.Read);
+
         let value = this._raw.getUint8(this._position);
-        this._position += 1;
+
+        this.move(ByteArray.BYTES_1, Mode.Read);
+
         return 0 !== value
     }
 
     public readByte(): number {
+        this.need(ByteArray.BYTES_1, Mode.Read);
+
         let value = this._raw.getInt8(this._position);
-        this._position += 1;
+
+        this.move(ByteArray.BYTES_1, Mode.Read);
+
         return value;
     }
 
+    public readBytes(dst: ByteArray, offset: number, length: number = 0): void {
+    }
+
     public readDouble(): number {
+        this.need(ByteArray.BYTES_8, Mode.Read);
+
         let value = this._raw.getFloat64(this._position, this._endian);
-        this._position += 8;
+
+        this.move(ByteArray.BYTES_8, Mode.Read);
+
         return value;
     }
 
     public readFloat(): number {
+        this.need(ByteArray.BYTES_4, Mode.Read);
+
         let value = this._raw.getFloat32(this._position, this._endian);
-        this._position += 4;
+
+        this.move(ByteArray.BYTES_4, Mode.Read);
+
         return value;
     }
 
     public readInt(): number {
+        this.need(ByteArray.BYTES_4, Mode.Read);
+
         let value = this._raw.getInt32(this._position, this._endian);
-        this._position += 4;
+
+        this.move(ByteArray.BYTES_4, Mode.Read);
+
         return value;
     }
 
     public readShort(): number {
+        this.need(ByteArray.BYTES_2, Mode.Read);
+
         let value = this._raw.getInt16(this._position, this._endian);
-        this._position += 2;
+
+        this.move(ByteArray.BYTES_2, Mode.Read);
+
         return value;
     }
 
     public readUnsignedByte(): number {
+        this.need(ByteArray.BYTES_1, Mode.Read);
+
         let value = this._raw.getUint8(this._position);
-        this._position += 1;
+
+        this.move(ByteArray.BYTES_1, Mode.Read);
+
         return value;
     }
 
     public readUnsignedInt(): number {
+        this.need(ByteArray.BYTES_4, Mode.Read);
+
         let value = this._raw.getUint32(this._position, this._endian);
-        this._position += 4;
+
+        this.move(ByteArray.BYTES_4, Mode.Read);
+
         return value;
     }
 
     public readUnsignedShort(): number {
+        this.need(ByteArray.BYTES_2, Mode.Read);
+
         let value = this._raw.getUint16(this._position, this._endian);
-        this._position += 2;
+
+        this.move(ByteArray.BYTES_2, Mode.Read);
+
         return value;
     }
 
@@ -112,63 +177,124 @@ export class ByteArray {
     }
 
     public readUTFBytes(length: number): string {
+        this.need(length, Mode.Read);
+
         let str: string = this._utf8decoder.decode(new Uint8Array(this._raw.buffer, this._position, length));
-        this._position += length;
+
+        this.move(length, Mode.Read);
+
         return str;
     }
 
     public writeBoolean(value: boolean): void {
+        this.need(ByteArray.BYTES_1, Mode.Write);
+
         this._raw.setUint8(this._position, value ? 1 : 0);
-        this._position += 1;
+
+        this.move(ByteArray.BYTES_1);
     }
 
     public writeByte(value: number): void {
-        this._raw.setInt8(this._position, value ? 1 : 0);
-        this._position += 1;
+        this.need(ByteArray.BYTES_1, Mode.Write);
+
+        this._raw.setInt8(this._position, value);
+
+        this.move(ByteArray.BYTES_1);
     }
 
     public writeDouble(value: number): void {
+        this.need(ByteArray.BYTES_8, Mode.Write);
+
         this._raw.setFloat64(this._position, value, this._endian);
-        this._position += 8;
+
+        this.move(ByteArray.BYTES_8);
     }
 
     public writeFloat(value: number): void {
+        this.need(ByteArray.BYTES_4, Mode.Write);
+
         this._raw.setFloat32(this._position, value, this._endian);
-        this._position += 4;
+
+        this.move(ByteArray.BYTES_4);
     }
 
     public writeInt(value: number): void {
+        this.need(ByteArray.BYTES_4, Mode.Write);
+
         this._raw.setInt32(this._position, value, this._endian);
-        this._position += 4;
+
+        this.move(ByteArray.BYTES_4);
     }
 
     public writeShort(value: number): void {
+        this.need(ByteArray.BYTES_2, Mode.Write);
+
         this._raw.setInt16(this._position, value, this._endian);
-        this._position += 2;
+
+        this.move(ByteArray.BYTES_2);
     }
 
     public writeUnsignedInt(value: number): void {
+        this.need(ByteArray.BYTES_4, Mode.Write);
+
         this._raw.setUint32(this._position, value, this._endian);
-        this._position += 4;
+
+        this.move(ByteArray.BYTES_4);
     }
 
     public writeUTF(value: string): void {
-        let length = this.copyUTF(value);
-        this.writeShort(length);
-        this._position += length;
+        let bs = this._utf8encoder.encode(value);
+
+        this.writeShort(bs.length);
+
+        this.need(bs.length, Mode.Write);
+
+        this.byte2byte(bs, new Uint8Array(this._raw.buffer, this._position));
+
+        this.move(bs.length);
     }
 
     public writeUTFBytes(value: string): void {
-        this._position += this.copyUTF(value);
-    }
-
-    private copyUTF(value: string): number {
         let bs = this._utf8encoder.encode(value);
 
-        for (let i = 0; i < bs.length; ++i) {
-            this._raw.setUint8(this._position + i, bs[i]);
+        this.need(bs.length, Mode.Write);
+
+        this.byte2byte(bs, new Uint8Array(this._raw.buffer, this._position));
+
+        this.move(bs.length);
+    }
+
+    private need(bytes: number, mode: Mode = Mode.Write): void {
+        if (Mode.Read == mode && bytes > this.bytesAvailable) {
+            throw "EOFError";
         }
 
-        return bs.length;
+        if (Mode.Write == mode && (0 === this._raw.byteLength || (bytes += (this._position > this._length ? (this._position - this._length) : 0)) > this._raw.byteLength - this._length)) {
+            let byteLength: number = 0 === this._raw.byteLength ? bytes + bytes : this._raw.byteLength + this._raw.byteLength;
+
+            while (bytes > byteLength) {
+                byteLength += byteLength;
+            }
+
+            this.byte2byte(new Uint8Array(this._raw.buffer), new Uint8Array((this._raw = new DataView(new ArrayBuffer(byteLength))).buffer));
+        }
+    }
+
+    private move(bytes: number, mode: Mode = Mode.Write): void {
+        this._position += bytes;
+
+        if (Mode.Write == mode && this._length < this._position) {
+            this._length = this._position;
+        }
+    }
+
+    private byte2byte(src: Uint8Array, dst: Uint8Array): number {
+        let length: number = Math.min(src.length, dst.length);
+
+        for (let i = 0; i < length; ++i) {
+            dst[i] = src[i];
+        }
+
+        return length;
     }
 }
