@@ -1,0 +1,27 @@
+{
+  "name": "as2ts",
+  "version": "0.0.1",
+  "description": "ActionScript API port to Typescirpt",
+  "main": "./lib/as2ts.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha -r ./node_modules/ts-node/register src/**/*_test.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wolfired/as2ts.git"
+  },
+  "author": "LinkWu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wolfired/as2ts/issues"
+  },
+  "homepage": "https://github.com/wolfired/as2ts#readme",
+  "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.7",
+    "chai": "^4.2.0",
+    "mocha": "^6.1.4",
+    "ts-node": "^8.3.0",
+    "typescript": "^3.5.3"
+  }
+}
