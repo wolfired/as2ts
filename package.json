@@ -1,6 +1,6 @@
 {
   "name": "as2ts",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "ActionScript API port to Typescirpt!!",
   "main": "./lib/as2ts.js",
   "types": "./lib/as2ts.d.ts",

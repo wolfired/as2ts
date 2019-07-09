@@ -2,8 +2,8 @@ import { ByteArray } from "../../../src/flash/utils/ByteArray";
 import { expect } from "chai";
 import "mocha";
 
-describe('ByteArray class', () => {
-    it('make a ByteArray', () => {
+describe("ByteArray class", () => {
+    it("make a ByteArray", () => {
         let ba = new ByteArray();
         expect(ba.position).to.equal(0);
         expect(ba.length).to.equal(0);
@@ -25,7 +25,7 @@ describe('ByteArray class', () => {
         expect(ba.bytesAvailable).to.equal(5);
     });
 
-    it('write and read bool', () => {
+    it("write and read bool", () => {
         let ba = new ByteArray();
 
         ba.length = 1;
@@ -51,7 +51,7 @@ describe('ByteArray class', () => {
         // expect(() => ba.readBoolean()).to.throw("EOFError");
     });
 
-    it('write and read i8/i16/i32', () => {
+    it("write and read i8/i16/i32", () => {
         let ba = new ByteArray(new DataView(new ArrayBuffer(0)));
         ba.writeByte(-1);
         ba.writeShort(-1);
@@ -63,7 +63,7 @@ describe('ByteArray class', () => {
         expect(ba.readInt()).to.equal(-1);
     });
 
-    it('write and read u8/u16/u32', () => {
+    it("write and read u8/u16/u32", () => {
         let ba = new ByteArray(new DataView(new ArrayBuffer(0)));
         ba.writeByte(1);
         ba.writeShort(1);
@@ -75,7 +75,7 @@ describe('ByteArray class', () => {
         expect(ba.readUnsignedInt()).to.equal(1);
     });
 
-    it('write and read f32/f64', () => {
+    it("write and read f32/f64", () => {
         let ba = new ByteArray(new DataView(new ArrayBuffer(0)));
         ba.writeDouble(3.14);
         ba.writeDouble(9.8);
@@ -85,7 +85,7 @@ describe('ByteArray class', () => {
         expect(ba.readDouble()).to.equal(9.8);
     });
 
-    it('write and read string', () => {
+    it("write and read string", () => {
         let ba = new ByteArray(new DataView(new ArrayBuffer(0)));
         ba.writeUTF("你好吗？");
         ba.position = 0;
