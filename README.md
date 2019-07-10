@@ -1,3 +1,3 @@
 # as2ts
 
-ActionScript API port to Typescirpt!!
+Actionscript API port to Typescirpt!!
