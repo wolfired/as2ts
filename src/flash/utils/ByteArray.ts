@@ -2,7 +2,7 @@ import { Endian } from "./Endian"
 
 enum Mode {
     Read = 1,
-    Write,
+    Write = 2,
 }
 
 const BYTES_1: number = 1;
@@ -16,16 +16,16 @@ const utf8decoder: TextDecoder = new TextDecoder();
 export class ByteArray {
     public constructor(raw?: DataView) {
         this._raw = void 0 === raw ? new DataView(new ArrayBuffer(0)) : raw;
-        this._endian = false;
-        this._length = 0;
-        this._position = 0;
+        this.endian = Endian.BIG_ENDIAN;
+        this.position = 0;
+        this.length = 0;
     }
 
     private _raw: DataView;
 
-    private _endian: boolean;
-    private _length: number;
-    private _position: number;
+    private _endian: boolean = false;
+    private _length: number = 0;
+    private _position: number = 0;
 
     public get endian(): Endian {
         return this._endian ? Endian.LITTLE_ENDIAN : Endian.BIG_ENDIAN;
@@ -72,8 +72,8 @@ export class ByteArray {
     }
 
     public clear(): void {
-        this._length = 0;
-        this._position = 0;
+        this.position = 0;
+        this.length = 0;
     }
 
     public readBoolean(): boolean {
@@ -94,9 +94,6 @@ export class ByteArray {
         this.move(BYTES_1, Mode.Read);
 
         return value;
-    }
-
-    public readBytes(dst: ByteArray, offset: number, length: number = 0): void {
     }
 
     public readDouble(): number {
@@ -188,7 +185,7 @@ export class ByteArray {
 
         this._raw.setUint8(this._position, value ? 1 : 0);
 
-        this.move(BYTES_1);
+        this.move(BYTES_1, Mode.Write);
     }
 
     public writeByte(value: number): void {
@@ -196,7 +193,7 @@ export class ByteArray {
 
         this._raw.setInt8(this._position, value);
 
-        this.move(BYTES_1);
+        this.move(BYTES_1, Mode.Write);
     }
 
     public writeDouble(value: number): void {
@@ -204,7 +201,7 @@ export class ByteArray {
 
         this._raw.setFloat64(this._position, value, this._endian);
 
-        this.move(BYTES_8);
+        this.move(BYTES_8, Mode.Write);
     }
 
     public writeFloat(value: number): void {
@@ -212,7 +209,7 @@ export class ByteArray {
 
         this._raw.setFloat32(this._position, value, this._endian);
 
-        this.move(BYTES_4);
+        this.move(BYTES_4, Mode.Write);
     }
 
     public writeInt(value: number): void {
@@ -220,7 +217,7 @@ export class ByteArray {
 
         this._raw.setInt32(this._position, value, this._endian);
 
-        this.move(BYTES_4);
+        this.move(BYTES_4, Mode.Write);
     }
 
     public writeShort(value: number): void {
@@ -228,7 +225,7 @@ export class ByteArray {
 
         this._raw.setInt16(this._position, value, this._endian);
 
-        this.move(BYTES_2);
+        this.move(BYTES_2, Mode.Write);
     }
 
     public writeUnsignedInt(value: number): void {
@@ -236,7 +233,7 @@ export class ByteArray {
 
         this._raw.setUint32(this._position, value, this._endian);
 
-        this.move(BYTES_4);
+        this.move(BYTES_4, Mode.Write);
     }
 
     public writeUTF(value: string): void {
@@ -248,7 +245,7 @@ export class ByteArray {
 
         this.byte2byte(bs, new Uint8Array(this._raw.buffer, this._position));
 
-        this.move(bs.length);
+        this.move(bs.length, Mode.Write);
     }
 
     public writeUTFBytes(value: string): void {
@@ -258,7 +255,7 @@ export class ByteArray {
 
         this.byte2byte(bs, new Uint8Array(this._raw.buffer, this._position));
 
-        this.move(bs.length);
+        this.move(bs.length, Mode.Write);
     }
 
     private need(bytes: number, mode: Mode = Mode.Write): void {
@@ -269,14 +266,18 @@ export class ByteArray {
             return;
         }
 
-        if ((0 === this._raw.byteLength || (bytes += (this._position > this._length ? (this._position - this._length) : 0)) > this._raw.byteLength - this._length)) {
-            let byteLength: number = 0 === this._raw.byteLength ? bytes + bytes : this._raw.byteLength + this._raw.byteLength;
+        let capOld = this._raw.byteLength;
 
-            while (bytes > byteLength) {
-                byteLength += byteLength;
+        if (0 === capOld) {
+            this._raw = new DataView(new ArrayBuffer(bytes))
+        } else {
+            let capNew = this._position + bytes
+
+            while (capOld < capNew) {
+                capOld += capOld
             }
 
-            this.byte2byte(new Uint8Array(this._raw.buffer), new Uint8Array((this._raw = new DataView(new ArrayBuffer(byteLength))).buffer));
+            this.byte2byte(new Uint8Array(this._raw.buffer), new Uint8Array((this._raw = new DataView(new ArrayBuffer(capOld))).buffer));
         }
     }
 

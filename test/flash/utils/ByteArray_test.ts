@@ -87,9 +87,11 @@ describe("ByteArray class", () => {
 
     it("write and read string", () => {
         let ba = new ByteArray(new DataView(new ArrayBuffer(0)));
-        ba.writeUTF("你好吗？");
+        ba.writeUTF("你好，我叫DayDayUp。");
+        ba.writeUTF("你好，我是新来的犀利哥。");
         ba.position = 0;
 
-        expect(ba.readUTF()).to.equal("你好吗？");
+        expect(ba.readUTF()).to.equal("你好，我叫DayDayUp。");
+        expect(ba.readUTF()).to.equal("你好，我是新来的犀利哥。");
     });
 });
